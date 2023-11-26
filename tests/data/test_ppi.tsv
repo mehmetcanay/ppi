@@ -1,0 +1,9 @@
+confidence_value	detection_method	a_uniprot_id	b_uniprot_id	interaction_type	pmid	a_name	a_taxid	b_name	b_taxid
+0.1	dm1	node_id1	node_id2	it1	pmid1	name_1	1	name_2	1
+0.2	dm2	node_id2	node_id3	it2	pmid1	name_2	1	name_3	1
+0.3	dm3	node_id2	node_id4	it2	pmid1	name_2	1	name_4	1
+0.4	dm1	node_id2	node_id5	it2	pmid1	name_2	1	name_5	1
+0.5	dm4	node_id5	node_id6	it2	pmid1	name_5	1	name_6	2
+0.6	dm1	node_id2	node_id6	it3	pmid1	name_2	1	name_6	2
+0.7	dm5	node_id6	node_id7	it3	pmid1	name_6	2	name_7	1
+0.8	dm2	node_id2	node_id3	it3	pmid1	name_2	1	name_3	1
