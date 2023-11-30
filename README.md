@@ -9,7 +9,7 @@
 **author:** Mehmet Can Ay
 
 ## Summary
-A module to create protein and interaction dataframes to generate a protein-protein interaction network. An existent SQL database can also be imported for the same purpose.
+A module to create protein and interaction dataframes to generate a protein-protein interaction network.
 
 ## Materials and Methods
 
