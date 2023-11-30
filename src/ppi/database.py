@@ -1,15 +1,11 @@
 import os
 import errno
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 
 
 class Database:
-    def __init__(
-        self,
-        path: str = "",
-        tables={"protein": pd.DataFrame(), "interaction": pd.DataFrame()},
-    ) -> None:
+    def __init__(self, path: str = ""):
         """Initializes an instance of Database class with default
         values if no values are passed. Creates a PROJECT_FOLDER in
         HOME named ".ppi" if not already exists. Creates an SQL database
@@ -17,13 +13,13 @@ class Database:
         exists, it will be replaced.
 
         Args:
-            path (str, optional): Path to the .tsv file containing data. Defaults to "".
-            tables (dict, optional): A dictionary of dataframes. 
-            Defaults to {"protein": pd.DataFrame(), "interaction": pd.DataFrame()}.
+            path (str, optional): Path to the .tsv file containing
+            data. Defaults to "".
+            tables (dict, optional): A dictionary of dataframes. Defaults to
+            {"protein": pd.DataFrame(), "interaction": pd.DataFrame()}.
         """
 
         self.path: str = path
-        self.tables: dict[str, pd.DataFrame] = tables
 
         HOME: str = os.path.expanduser("~")
         PROJECT_FOLDER: str = os.path.join(HOME, ".ppi")
@@ -35,7 +31,7 @@ class Database:
         DB_PATH: str = os.path.join(PROJECT_FOLDER, "ppi.sqlite")
         self.engine = create_engine("sqlite:///" + DB_PATH)
 
-    def set_path_to_data_file(self, path: str) -> None:
+    def set_path_to_data_file(self, path: str) -> bool:
         """Changes self.path value if the given path to the data file is valid.
 
         Args:
@@ -43,12 +39,16 @@ class Database:
 
         Raises:
             FileNotFoundError: Given path is not valid
+
+        Returns:
+            bool: True, if the path is valid
         """
 
         # Set self.path to path if the given path is valid,
         # raise an error otherwise
         if os.path.isfile(path):
             self.path = path
+            return True
         else:
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
 
@@ -56,7 +56,8 @@ class Database:
         """Reads the data from the .tsv file in the given path.
 
         Returns:
-            df (pd.DataFrame): Pandas DataFrame containing information from the file in the given path
+            df (pd.DataFrame): Pandas DataFrame containing information
+            from the file in the given path.
         """
 
         df: pd.DataFrame = pd.read_csv(self.path, sep="\t")
@@ -73,17 +74,28 @@ class Database:
         # Read the data in the given path
         df: pd.DataFrame = self.read_data()
 
+        column_names_a: dict[str, str] = {
+            "a_uniprot_id": "accession",
+            "a_name": "name",
+            "a_taxid": "taxid",
+        }
+        column_names_b: dict[str, str] = {
+            "b_uniprot_id": "accession",
+            "b_name": "name",
+            "b_taxid": "taxid",
+        }
+
         # Extract informations on protein a and rename columns
         protein_a: pd.DataFrame = df.loc[:, ["a_uniprot_id", "a_name", "a_taxid"]]
         protein_a.rename(
-            columns={"a_uniprot_id": "accession", "a_name": "name", "a_taxid": "taxid"},
+            columns=column_names_a,
             inplace=True,
         )
 
         # Extract informations on protein b and rename columns
         protein_b: pd.DataFrame = df.loc[:, ["b_uniprot_id", "b_name", "b_taxid"]]
         protein_b.rename(
-            columns={"b_uniprot_id": "accession", "b_name": "name", "b_taxid": "taxid"},
+            columns=column_names_b,
             inplace=True,
         )
 
@@ -104,8 +116,6 @@ class Database:
 
         # Rename index to id for consistency in SQL format
         proteins.index.name = "id"
-
-        proteins.to_sql(name="protein", con=self.engine, if_exists="replace")
 
         return proteins
 
@@ -154,27 +164,25 @@ class Database:
         # Reset the index
         interactions.reset_index(inplace=True, drop=True)
 
-        # Increment the indices by 1 and rename it as id for consistency in SQL format
+        # Increment the indices by 1 and rename it as
+        # id for consistency in SQL format
         interactions.index += 1
         interactions.index.name = "id"
-
-        interactions.to_sql(name="interaction", con=self.engine, if_exists="replace")
 
         return interactions
 
     def import_data(self) -> None:
-        """Imports SQL database as Pandas DataFrame and stores it in
+        """Imports an SQL database as Pandas DataFrame and stores it in
         self.tables dictionary. The SQL database must contain two
         tables named "protein" and "interaction".
         """
 
         # Reading tables from the SQL database
-        protein: pd.DataFrame = pd.read_sql("protein", con=self.engine)
-        interaction: pd.DataFrame = pd.read_sql("interaction", con=self.engine)
+        protein: pd.DataFrame = self.get_proteins()
+        interaction: pd.DataFrame = self.get_interactions()
 
-        # Storing them in self.tables dictionary of dataframes.
-        self.tables["protein"] = protein
-        self.tables["interaction"] = interaction
+        protein.to_sql(name="protein", con=self.engine, if_exists="replace")
+        interaction.to_sql(name="interaction", con=self.engine, if_exists="replace")
 
     def get_table_names(self) -> list[str]:
         """Retrieves table names in the SQL database.
@@ -184,7 +192,10 @@ class Database:
             the tables in the SQL database.
         """
 
-        table_names: list[str] = list(self.tables.keys())
+        with self.engine.connect() as connection:
+            inspector = inspect(connection)
+            table_names: list[str] = inspector.get_table_names()
+
         return table_names
 
     def get_columns(self, table: str) -> list[str]:
@@ -195,9 +206,13 @@ class Database:
             table (str): Name of the table
 
         Returns:
-            columns (list[str]): A list containing names of the columns in a dataframe
+            columns (list[str]): A list containing names
+            of the columns in a dataframe
         """
-        df: pd.DataFrame = self.tables[table]
-        columns: list[str] = list(df.columns)
+
+        with self.engine.connect() as connection:
+            inspector = inspect(connection)
+            columns = inspector.get_columns(table)
+            columns = [column["name"] for column in columns]
 
         return columns
