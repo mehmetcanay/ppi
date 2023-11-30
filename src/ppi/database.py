@@ -15,8 +15,6 @@ class Database:
         Args:
             path (str, optional): Path to the .tsv file containing
             data. Defaults to "".
-            tables (dict, optional): A dictionary of dataframes. Defaults to
-            {"protein": pd.DataFrame(), "interaction": pd.DataFrame()}.
         """
 
         self.path: str = path
@@ -29,19 +27,21 @@ class Database:
             os.mkdir(PROJECT_FOLDER)
 
         DB_PATH: str = os.path.join(PROJECT_FOLDER, "ppi.sqlite")
+
+        # Create an engine for the SQL database
         self.engine = create_engine("sqlite:///" + DB_PATH)
 
     def set_path_to_data_file(self, path: str) -> bool:
         """Changes self.path value if the given path to the data file is valid.
 
         Args:
-            path (str): A path to a data file
+            path (str): A path to a data file.
 
         Raises:
-            FileNotFoundError: Given path is not valid
+            FileNotFoundError: Given path is not valid.
 
         Returns:
-            bool: True, if the path is valid
+            bool: True, if the path is valid.
         """
 
         # Set self.path to path if the given path is valid,
@@ -50,7 +50,9 @@ class Database:
             self.path = path
             return True
         else:
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
+            raise FileNotFoundError(errno.ENOENT,
+                                    os.strerror(errno.ENOENT),
+                                    path)
 
     def read_data(self) -> pd.DataFrame:
         """Reads the data from the .tsv file in the given path.
@@ -74,11 +76,14 @@ class Database:
         # Read the data in the given path
         df: pd.DataFrame = self.read_data()
 
+        # Column rename map of protein a
         column_names_a: dict[str, str] = {
             "a_uniprot_id": "accession",
             "a_name": "name",
             "a_taxid": "taxid",
         }
+
+        # Column rename map of protein b
         column_names_b: dict[str, str] = {
             "b_uniprot_id": "accession",
             "b_name": "name",
@@ -86,14 +91,16 @@ class Database:
         }
 
         # Extract informations on protein a and rename columns
-        protein_a: pd.DataFrame = df.loc[:, ["a_uniprot_id", "a_name", "a_taxid"]]
+        columns_a: list[str] = ["a_uniprot_id", "a_name", "a_taxid"]
+        protein_a: pd.DataFrame = df.loc[:, columns_a]
         protein_a.rename(
             columns=column_names_a,
             inplace=True,
         )
 
         # Extract informations on protein b and rename columns
-        protein_b: pd.DataFrame = df.loc[:, ["b_uniprot_id", "b_name", "b_taxid"]]
+        columns_b: list[str] = ["b_uniprot_id", "b_name", "b_taxid"]
+        protein_b: pd.DataFrame = df.loc[:, columns_b]
         protein_b.rename(
             columns=column_names_b,
             inplace=True,
@@ -149,17 +156,20 @@ class Database:
         interactions.drop_duplicates(inplace=True)
 
         # Change the uniprot_ids with ids from proteins dataframe
+        accession = proteins["accession"]
         interactions["protein_a_id"] = interactions.apply(
-            lambda x: proteins.loc[proteins["accession"] == x["a_uniprot_id"]].index[0],
+            lambda x: proteins.loc[accession == x["a_uniprot_id"]].index[0],
             axis=1,
         )
         interactions["protein_b_id"] = interactions.apply(
-            lambda x: proteins.loc[proteins["accession"] == x["b_uniprot_id"]].index[0],
+            lambda x: proteins.loc[accession == x["b_uniprot_id"]].index[0],
             axis=1,
         )
 
         # Drop the columns that are no longer needed
-        interactions.drop(["a_uniprot_id", "b_uniprot_id"], axis=1, inplace=True)
+        interactions.drop(["a_uniprot_id", "b_uniprot_id"],
+                          axis=1,
+                          inplace=True)
 
         # Reset the index
         interactions.reset_index(inplace=True, drop=True)
@@ -172,17 +182,19 @@ class Database:
         return interactions
 
     def import_data(self) -> None:
-        """Imports an SQL database as Pandas DataFrame and stores it in
-        self.tables dictionary. The SQL database must contain two
-        tables named "protein" and "interaction".
+        """Exports protein and interaction tables created by get_proteins() and
+        get_interactions() functions into the SQL database.
         """
 
-        # Reading tables from the SQL database
+        # Getting the tables
         protein: pd.DataFrame = self.get_proteins()
         interaction: pd.DataFrame = self.get_interactions()
 
+        # Exporting the tables to an SQL database
         protein.to_sql(name="protein", con=self.engine, if_exists="replace")
-        interaction.to_sql(name="interaction", con=self.engine, if_exists="replace")
+        interaction.to_sql(name="interaction",
+                           con=self.engine,
+                           if_exists="replace")
 
     def get_table_names(self) -> list[str]:
         """Retrieves table names in the SQL database.
@@ -192,6 +204,8 @@ class Database:
             the tables in the SQL database.
         """
 
+        # Inspect the connection of the connected engine
+        # to retrieve the table names
         with self.engine.connect() as connection:
             inspector = inspect(connection)
             table_names: list[str] = inspector.get_table_names()
@@ -199,20 +213,26 @@ class Database:
         return table_names
 
     def get_columns(self, table: str) -> list[str]:
-        """Returns the list of column names in Pandas
-        DataFrame generated from an SQL database.
+        """Returns the list of column names in a given table
+        in the SQL database.
 
         Args:
-            table (str): Name of the table
+            table (str): Name of the table.
 
         Returns:
             columns (list[str]): A list containing names
-            of the columns in a dataframe
+            of the columns in a table.
         """
 
+        # Inspect the connection of the connected engine
+        # to retrieve the column names
         with self.engine.connect() as connection:
             inspector = inspect(connection)
+
+            # Get columns from a specified table
             columns = inspector.get_columns(table)
+
+            # Retrieve name information from ReflectedColumn object
             columns = [column["name"] for column in columns]
 
         return columns
