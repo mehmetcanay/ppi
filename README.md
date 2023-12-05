@@ -14,7 +14,7 @@ A module to create protein and interaction dataframes to generate a protein-prot
 ## Materials and Methods
 
 ### Libraries and software
-pdm, pandas, sqlalchemy
+pdm, pandas, sqlalchemy, networkx
 
 ### Data
 1. [test_data](./tests/data/test_ppi.tsv)
