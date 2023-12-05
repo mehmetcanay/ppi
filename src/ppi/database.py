@@ -1,8 +1,10 @@
+from operator import index
 import os
 import errno
 from typing import Any
 import pandas as pd
 from sqlalchemy import create_engine, inspect
+import networkx as nx
 
 HOME: str = os.path.expanduser("~")
 PROJECT_FOLDER: str = os.path.join(HOME, ".ppi")
@@ -385,7 +387,7 @@ class Database:
         statistics_df.set_index("interaction_type", inplace=True)
 
         return statistics_df
-    
+
     def get_confidence_value_statistics(self) -> pd.DataFrame:
         """Generates a table of confidence value statistics.
 
@@ -417,3 +419,131 @@ class Database:
         statistics_df.set_index("confidence_value", inplace=True)
 
         return statistics_df
+
+    def get_where(
+        self,
+        pmid: str = "",
+        detection_method: str = "",
+        interaction_type: str = "",
+        confidence_value_gte: float = -1,
+        disallow_self_interaction: bool = False,
+    ) -> str:
+        """Generates a WHERE SQL query with given input.
+
+        Args:
+            pmid (str, optional): Specified PMID. Defaults to "".
+
+            confidence_value_gte (float, optional): Specified minimum
+            confidence value. Defaults to -1.
+
+            detection_method (str, optional): Specified detection method.
+            Defaults to "".
+
+            interaction_type (str, optional): Specified interaction type.
+            Defaults to "".
+
+            disallow_self_interaction (bool | None, optional): True if self
+            interaction is allowed, False otherwise. Defaults to False.
+
+        Returns:
+            sql_query (str): WHERE SQL query with specified parameters.
+        """
+
+        sql_query: str = ""
+
+        if pmid:
+            if sql_query:
+                sql_query += f" AND pmid = '{pmid}'"
+            else:
+                sql_query = f" WHERE pmid = '{pmid}'"
+
+        if detection_method:
+            if sql_query:
+                sql_query += f" AND detection_method = '{detection_method}'"
+            else:
+                sql_query = f" WHERE detection_method = '{detection_method}'"
+
+        if interaction_type:
+            if sql_query:
+                sql_query += f" AND interaction_type = '{interaction_type}'"
+            else:
+                sql_query = f" WHERE interaction_type = '{interaction_type}'"
+
+        if confidence_value_gte >= 0:
+            if sql_query:
+                sql_query += f" AND confidence_value >= {confidence_value_gte}"
+            else:
+                sql_query = f" WHERE confidence_value >= {confidence_value_gte}"
+
+        if disallow_self_interaction is True:
+            if sql_query:
+                sql_query += f" AND protein_a_id != protein_b_id"
+            else:
+                sql_query: str = f" WHERE protein_a_id != protein_b_id"
+
+        return sql_query
+
+    def get_graph(
+        self,
+        pmid: str = "",
+        detection_method: str = "",
+        interaction_type: str = "",
+        confidence_value_gte: float = -1,
+        disallow_self_interaction: bool = False,
+    ) -> nx.MultiGraph | bool:
+        if self.engine:
+            # Initialize the MultiGraph instance
+            G = nx.MultiGraph()
+
+            query: str = self.get_where(
+                pmid=pmid,
+                detection_method=detection_method,
+                interaction_type=interaction_type,
+                confidence_value_gte=confidence_value_gte,
+                disallow_self_interaction=disallow_self_interaction,
+            )
+
+            # Read the dataframes
+            protein: pd.DataFrame = pd.read_sql("protein", self.engine, index_col="id")
+            interaction: pd.DataFrame = pd.read_sql(
+                f"SELECT * from interaction{query}", self.engine, index_col="id"
+            )
+
+            # Extracting protein ids existing in the interaction database
+            proteins_a = set(interaction.protein_a_id.unique())
+            proteins_b = set(interaction.protein_b_id.unique())
+            proteins = proteins_a.union(proteins_b)
+            proteins = list(sorted(proteins))
+
+            # Filter the protein db based on the existing protein ids
+            # in the interaction database
+            protein = protein.loc[proteins]
+
+            # Iterate over the indices of fitered protein dataframe
+            # and add them as nodes with their corresponding attributes
+            for node in protein.index:
+                G.add_node(
+                    node,
+                    accession=protein.loc[node, "accession"],
+                    name=protein.loc[node, "name"],
+                    taxid=protein.loc[node, "taxid"],
+                )
+
+            # Iterate over the indices of interaction dataframe
+            # and add them as edges with their corresponding attributes
+            for i in interaction.index:
+                G.add_edge(
+                    u_for_edge=interaction.loc[i, "protein_a_id"],
+                    v_for_edge=interaction.loc[i, "protein_b_id"],
+                    id=i,
+                    confidence_value=interaction.loc[i, "confidence_value"],
+                    pmid=interaction.loc[i, "pmid"],
+                    interaction_type=interaction.loc[i, "interaction_type"],
+                    detection_method=interaction.loc[i, "detection_method"],
+                )
+
+            return G
+
+        else:
+            print("Please create a database first by using import_data() function")
+            return False
