@@ -161,6 +161,7 @@ class TestDatabase:
 
     def test_detection_method_statistics(self):
         """Test distribution of detection_method in interactions."""
+        self.db.import_data()
         df = self.db.get_detection_method_statistics()
         assert df.to_dict() == {
             "number": {"dm1": 3, "dm2": 2, "dm5": 1, "dm4": 1, "dm3": 1}
@@ -169,18 +170,21 @@ class TestDatabase:
 
     def test_pmid_statistics(self):
         """Test distribution of pmid in interactions."""
+        self.db.import_data()
         df = self.db.get_pmid_statistics()
         assert df.to_dict() == {"number": {"pmid1": 8}}
         assert df.index.name == "pmid"
 
     def test_interaction_type_statistics(self):
         """Test distribution of interaction_type in interactions."""
+        self.db.import_data()
         df = self.db.get_interaction_type_statistics()
         assert df.to_dict() == {"number": {"it2": 4, "it3": 3, "it1": 1}}
         assert df.index.name == "interaction_type"
 
     def test_confidence_value_statistics(self):
         """Test distribution of confidence_value in interactions."""
+        self.db.import_data()
         df = self.db.get_confidence_value_statistics()
         assert df.to_dict() == {
             "number": {0.8: 1, 0.7: 1, 0.6: 1, 0.5: 1, 0.4: 1, 0.3: 1, 0.2: 1, 0.1: 1}
@@ -226,6 +230,7 @@ class TestDatabase:
 
     def test_get_graph(self):
         """Tests if the graph created from a database query has the correct values."""
+        self.db.import_data()
         g = self.db.get_graph()
         assert g.number_of_edges() == 8
         assert set(g.edges) == expected_graph_edges
@@ -233,11 +238,13 @@ class TestDatabase:
 
     def test_data_in_node(self):
         """Test if data from the protein table are loaded into the nodes."""
+        self.db.import_data()
         graph = self.db.get_graph()
         assert graph.nodes[1] == {"accession": "node_id1", "name": "name_1", "taxid": 1}
 
     def test_data_in_graphs(self):
         """Test if data from the interaction table are loaded into the edges."""
+        self.db.import_data()
         graph = self.db.get_graph()
         # id in the result is equivalent to the id in the interaction table
         assert graph.edges[(1, 2, 0)] == {
@@ -253,24 +260,28 @@ class TestDatabase:
 
         This filter gets all entries with a confidence_value >= confidence_value_gte
         """
+        self.db.import_data()
         g = self.db.get_graph(confidence_value_gte=0.7)
         assert set(g.nodes) == {2, 3, 6, 7}
         assert set(g.edges) == {(2, 3, 0), (6, 7, 0)}
 
     def test_filter_detection_method(self):
         """Test the detection_method filter for the get_graph method."""
+        self.db.import_data()
         g = self.db.get_graph(detection_method="dm3")
         assert set(g.nodes) == {2, 4}
         assert set(g.edges) == {(2, 4, 0)}
 
     def test_filter_interaction_type(self):
         """Test the interaction_type filter for the get_graph method."""
+        self.db.import_data()
         g = self.db.get_graph(interaction_type="it1")
         assert set(g.nodes) == {1, 2}
         assert set(g.edges) == {(1, 2, 0)}
 
     def test_filter_pmid(self):
         """Test the pmid filter for the get_graph method."""
+        self.db.import_data()
         g = self.db.get_graph(pmid="pmid1")
         assert g.number_of_nodes() == 7
         assert g.number_of_edges() == 8
@@ -280,5 +291,6 @@ class TestDatabase:
 
         This can not been tested, because no self interaction are in the test dataset.
         """
+        self.db.import_data()
         g = self.db.get_graph(disallow_self_interaction=True)
         assert g.number_of_edges() == 8
