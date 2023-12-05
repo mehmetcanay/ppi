@@ -1,4 +1,3 @@
-from operator import index
 import os
 import errno
 from typing import Any
