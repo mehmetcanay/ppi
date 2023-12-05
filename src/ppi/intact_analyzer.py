@@ -1,4 +1,5 @@
 import networkx as nx
+import matplotlib.pyplot as plt
 
 
 class IntActAnalyzer:
@@ -68,3 +69,36 @@ class IntActAnalyzer:
         else:
             print("No node with the specified name found")
             return False
+
+    def draw_graph(self, edge_label="id", node_label="id", figsize=(10, 5)):
+        """Shows the graph.
+
+        Arguments `edge_label` and `node_label` allows to change the labels in the graph.
+
+        node_label: Any of the keys in node data
+        edge_label: Any of the keys in edge data
+
+        Args:
+            edge_label (str, optional): Label to be shown on edges. Defaults to "id".
+            node_label (str, optional): Label to be shown on nodes. Defaults to "id".
+            figsize (tuple, optional): Size of the graph. Defaults to (10, 5).
+        """
+        plt.figure(figsize=figsize)
+        if node_label == "id":
+            node_labels = {x: x for x in self.graph.nodes}
+        else:
+            node_labels = {x: self.graph.nodes[x][node_label] for x in self.graph.nodes}
+        edge_labels = {}
+        for edge in self.graph.edges:
+            eid = str(self.graph.edges[edge][edge_label])
+            if edge[:2] not in edge_labels:
+                edge_labels[edge[:2]] = eid
+            else:
+                edge_labels[edge[:2]] += f",{eid}"
+        pos = nx.spring_layout(self.graph)  # Layout for the graph
+        nx.draw_networkx_nodes(self.graph, pos)
+        nx.draw_networkx_edges(self.graph, pos)
+        nx.draw_networkx_labels(self.graph, pos, labels=node_labels)
+        nx.draw_networkx_edge_labels(self.graph, pos, edge_labels=edge_labels)
+
+        plt.show()
