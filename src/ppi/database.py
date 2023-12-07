@@ -108,7 +108,7 @@ class Database:
             "b_taxid": "taxid",
         }
 
-        # Extract informations on protein a and rename columns
+        # Extract information on protein a and rename columns
         columns_a: list[str] = ["a_uniprot_id", "a_name", "a_taxid"]
         protein_a: pd.DataFrame = df.loc[:, columns_a]
         protein_a.rename(
@@ -116,7 +116,7 @@ class Database:
             inplace=True,
         )
 
-        # Extract informations on protein b and rename columns
+        # Extract information on protein b and rename columns
         columns_b: list[str] = ["b_uniprot_id", "b_name", "b_taxid"]
         protein_b: pd.DataFrame = df.loc[:, columns_b]
         protein_b.rename(
@@ -124,10 +124,10 @@ class Database:
             inplace=True,
         )
 
-        # Concatane informations of protein a and protein b
+        # Concatenate information of protein a and protein b
         proteins: pd.DataFrame = pd.concat([protein_a, protein_b])
 
-        # Drop duplicated informations
+        # Drop duplicated information
         proteins.drop_duplicates(inplace=True)
 
         # Sort the data by the accession number
@@ -136,7 +136,7 @@ class Database:
         # Reset the index and drop the previous index column
         proteins.reset_index(inplace=True, drop=True)
 
-        # Increminate indices by 1 for consistency in SQL format
+        # Incriminate indices by 1 for consistency in SQL format
         proteins.index += 1
 
         # Rename index to id for consistency in SQL format
@@ -179,7 +179,7 @@ class Database:
             return interactions
 
         else:
-            # Extract informations about unique proteins
+            # Extract information about unique proteins
             proteins: pd.DataFrame = self.get_proteins()
 
             # Columns to be used in filtration
@@ -314,8 +314,8 @@ class Database:
         # Initialize a dictionary to hold statistic values
         statistics: dict[str, list[Any]] = {"detection_method": methods, "number": []}
 
-        # Iterate over the detection methods and retrieve the occurences of them. Store
-        # the number of occurences in statistics dictionary
+        # Iterate over the detection methods and retrieve the occurrences of them. Store
+        # the number of occurrences in statistics dictionary
         for method in methods:
             number: int = df.detection_method.value_counts()[method]
             statistics["number"].append(number)
@@ -343,8 +343,8 @@ class Database:
         # Initialize a dictionary to hold statistic values
         statistics: dict[str, list[Any]] = {"pmid": pmids, "number": []}
 
-        # Iterate over the pmids and retrieve the occurences of them. Store the
-        # number of occurences in statistics dictionary
+        # Iterate over the pmids and retrieve the occurrences of them. Store the
+        # number of occurrences in statistics dictionary
         for pmid in pmids:
             number: int = df.pmid.value_counts()[pmid]
             statistics["number"].append(number)
@@ -375,8 +375,8 @@ class Database:
             "number": [],
         }
 
-        # Iterate over the interaction types and retrieve the occurences of
-        # them. Store the number of occurences in statistics dictionary
+        # Iterate over the interaction types and retrieve the occurrences of
+        # them. Store the number of occurrences in statistics dictionary
         for interaction_type in interaction_types:
             number: int = df.interaction_type.value_counts()[interaction_type]
             statistics["number"].append(number)
@@ -407,8 +407,8 @@ class Database:
             "number": [],
         }
 
-        # Iterate over the confidence values and retrieve the occurences of
-        # them. Store the number of occurences in statistics dictionary
+        # Iterate over the confidence values and retrieve the occurrences of
+        # them. Store the number of occurrences in statistics dictionary
         for confidence_value in confidence_values:
             number: int = df.confidence_value.value_counts()[confidence_value]
             statistics["number"].append(number)
@@ -518,7 +518,7 @@ class Database:
             # in the interaction database
             protein = protein.loc[proteins]
 
-            # Iterate over the indices of fitered protein dataframe
+            # Iterate over the indices of filtered protein dataframe
             # and add them as nodes with their corresponding attributes
             for node in protein.index:
                 G.add_node(
