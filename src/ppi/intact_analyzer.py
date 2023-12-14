@@ -112,3 +112,13 @@ class IntActAnalyzer:
         nx.draw_networkx_edge_labels(self.graph, pos, edge_labels=edge_labels)
 
         plt.show()
+
+    def number_of_nodes(self) -> int:
+        """Number of nodes in the graph.
+
+        Returns:
+            number_of_nodes (int): Number of nodes in the graph.
+        """
+
+        number_of_nodes: int = self.graph.number_of_nodes()
+        return number_of_nodes
