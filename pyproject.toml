@@ -15,6 +15,15 @@ requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "MIT"}
 
+[project.optional-dependencies]
+doc = [
+    "sphinx>=7.2.6",
+    "sphinx-rtd-theme>=2.0.0",
+    "myst-parser>=2.0.0",
+    "pandoc>=2.3",
+    "nbsphinx>=0.9.3",
+    "ipython>=8.18.1",
+]
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
