@@ -10,6 +10,7 @@ dependencies = [
     "sqlalchemy>=2.0.23",
     "networkx>=3.2.1",
     "matplotlib>=3.8.2",
+    "click>=8.1.7",
 ]
 requires-python = ">=3.11"
 readme = "README.md"
@@ -32,3 +33,7 @@ build-backend = "pdm.backend"
 dev = [
     "pytest>=7.4.3",
 ]
+
+[project.scripts]
+bcentrality = "ppi.intact_analyzer:get_protein_with_highest_bc"
+number_of_nodes = "ppi.intact_analyzer:number_of_nodes"
