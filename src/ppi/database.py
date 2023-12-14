@@ -33,8 +33,7 @@ class Database:
         HOME named ".ppi" if not already exists.
 
         Args:
-            path (str, optional): Path to the .tsv file containing
-            data. Defaults to "".
+            path (str, optional): Path to a data file. Defaults to "".
         """
 
         self.path: str = path
@@ -456,14 +455,11 @@ class Database:
 
             confidence_value_gte (float, optional): Specified minimum confidence value. Defaults to -1.
 
-            detection_method (str, optional): Specified detection method.
-            Defaults to "".
+            detection_method (str, optional): Specified detection method Defaults to "".
 
-            interaction_type (str, optional): Specified interaction type.
-            Defaults to "".
+            interaction_type (str, optional): Specified interaction type Defaults to "".
 
-            disallow_self_interaction (bool | None, optional): True if self
-            interaction is allowed, False otherwise. Defaults to False.
+            disallow_self_interaction (bool | None, optional): True if self interaction is allowed, False otherwise. Defaults to False.
 
         Returns:
             sql_query (str): WHERE SQL query with specified parameters.

@@ -1,6 +1,7 @@
 """This is a module to graphically represent protein-protein interactions"""
 
 
+from typing import Any
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -16,11 +17,11 @@ class IntActAnalyzer:
         """
         self.graph: nx.MultiGraph = graph
 
-    def get_protein_with_highest_bc(self):
+    def get_protein_with_highest_bc(self) -> dict[str, Any]:
         """Finds the protein with the highest betweenness score.
 
         Returns:
-            node: The node with the maximum betweeness score.
+            node: The node with the maximum betweenness score.
         """
         # Initialize betweenness centrality value as 0
         max_bc = 0
@@ -28,20 +29,20 @@ class IntActAnalyzer:
         # Initialize the id of the node with the maximum betweenness score
         max_bc_node = None
 
-        # Calculate the betweeness score of all the nodes
+        # Calculate the betweenness score of all the nodes
         bc_dict = nx.betweenness_centrality(self.graph)
 
         for node, bc in bc_dict.items():
             self.graph.nodes[node]["node_id"] = node
             self.graph.nodes[node]["bc_value"] = bc
 
-            # If the betweennes score is greater than the maximum score,
+            # If the betweenness score is greater than the maximum score,
             # assign the new score to max_bc
             if bc > max_bc:
                 max_bc: float = bc
                 max_bc_node = node
 
-        node = self.graph.nodes[max_bc_node]
+        node: dict[str, Any] = self.graph.nodes[max_bc_node]
         return node
 
     def get_neighbors_name(self, name: str) -> list[str] | bool:

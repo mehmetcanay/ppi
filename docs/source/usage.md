@@ -11,13 +11,15 @@ To install ppi:
 ## Database Module
 
 ```{eval-rst}
-.. automodule:: src.ppi.database
+.. automodule:: ppi.database
     :members:
+    :special-members: __init__
 ```
 
 ## IntActAnalyzer Module
 
 ```{eval-rst}
-.. automodule:: src.ppi.intact_analyzer
+.. automodule:: ppi.intact_analyzer
     :members:
+    :special-members: __init__
 ```
