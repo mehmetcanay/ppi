@@ -1,12 +1,23 @@
 """This is a module to create and manage and SQL database for protein-protein interaction"""
 
 
-import os
 import errno
-from typing import Any
+import logging
+import networkx as nx
+import os
 import pandas as pd
 from sqlalchemy import create_engine, inspect
-import networkx as nx
+from typing import Any
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    filemode="a",
+    filename="logs/package.log",
+)
+
+logger = logging.getLogger(name=__name__)
 
 HOME: str = os.path.expanduser("~")
 PROJECT_FOLDER: str = os.path.join(HOME, ".ppi")
@@ -50,10 +61,12 @@ class Database:
         if os.path.isfile(PATH_TO_DB):
             os.remove(PATH_TO_DB)
             self.exists = False
+            logger.info(msg="SQL Database is dropped")
             return True
 
         # Raise an error if there is no database
         else:
+            logger.error(msg="FileNotFoundError", exc_info=True)
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), PATH_TO_DB)
 
     def set_path_to_data_file(self, path: str) -> bool:
@@ -73,8 +86,10 @@ class Database:
         # raise an error otherwise
         if os.path.isfile(path):
             self.path = path
+            logger.info(msg=f"The path to data: {path}")
             return True
         else:
+            logger.error(msg="FileNotFoundError", exc_info=True)
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
 
     def read_data(self) -> pd.DataFrame:
@@ -253,6 +268,8 @@ class Database:
         # Exporting the tables to an SQL database
         protein.to_sql(name="protein", con=self.engine, if_exists="replace")
         interaction.to_sql(name="interaction", con=self.engine, if_exists="replace")
+
+        logger.info(msg="An SQL database is created")
 
     def get_table_names(self) -> list[str]:
         """Retrieves table names in the SQL database.
