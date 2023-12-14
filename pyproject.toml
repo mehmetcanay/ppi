@@ -35,5 +35,4 @@ dev = [
 ]
 
 [project.scripts]
-bcentrality = "ppi.intact_analyzer:get_protein_with_highest_bc"
-number_of_nodes = "ppi.intact_analyzer:number_of_nodes"
+ppi = "ppi.main:main"
