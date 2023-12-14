@@ -1,3 +1,6 @@
+"""This is a module to create and manage and SQL database for protein-protein interaction"""
+
+
 import os
 import errno
 from typing import Any
@@ -11,6 +14,8 @@ PATH_TO_DB: str = os.path.join(PROJECT_FOLDER, "ppi.sqlite")
 
 
 class Database:
+    """This class represents a database."""
+
     def __init__(self, path: str = ""):
         """Initializes an instance of Database class with default
         values if no values are passed. Creates a PROJECT_FOLDER in
@@ -432,8 +437,7 @@ class Database:
         Args:
             pmid (str, optional): Specified PMID. Defaults to "".
 
-            confidence_value_gte (float, optional): Specified minimum
-            confidence value. Defaults to -1.
+            confidence_value_gte (float, optional): Specified minimum confidence value. Defaults to -1.
 
             detection_method (str, optional): Specified detection method.
             Defaults to "".

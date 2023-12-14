@@ -1,9 +1,19 @@
+"""This is a module to graphically represent protein-protein interactions"""
+
+
 import networkx as nx
 import matplotlib.pyplot as plt
 
 
 class IntActAnalyzer:
+    """This class represents a protein-protein interaction graph analyzer."""
+
     def __init__(self, graph: nx.MultiGraph):
+        """Initializes an instance of IntActAnalyzer class.
+
+        Args:
+            graph (nx.MultiGraph): A networkx MultiGraph.
+        """
         self.graph: nx.MultiGraph = graph
 
     def get_protein_with_highest_bc(self):
