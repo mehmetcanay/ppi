@@ -3,8 +3,9 @@
 % You can adapt this file completely to your liking, but it should at least
 % contain the root `toctree` directive.
 
-```{include} ../../README.md
-```
+# PPI
+
+A module to create protein and interaction dataframes to generate a protein-protein interaction network.
 
 For further info, check out {doc}`usage`.
 Read installation instructions in {ref}`Installation`.
@@ -13,6 +14,6 @@ Read installation instructions in {ref}`Installation`.
 :caption: 'Contents:'
 :maxdepth: 2
 
-usage
-../notebooks/tutorial
+./usage
+./notebooks/tutorial
 ```
